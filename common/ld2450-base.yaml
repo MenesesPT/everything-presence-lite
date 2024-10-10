@@ -590,7 +590,7 @@ uart:
       # - lambda: UARTDebug::log_hex(direction, bytes, ' ');
       - lambda: |-
           unsigned long time = millis();
-          if ((time - id(mmwave_update_time)) <= 200) { 
+          if ((time - id(mmwave_update_time)) <= 100) { 
             return;
           };
           id(mmwave_update_time) = time;
@@ -960,4 +960,4 @@ uart:
               id(zone4_target_count).publish_state(0);
             }
           }
-          ESP_LOGD("custom", "UART took %lu", millis()-time);
+          ESP_LOGI("custom", "UART took %lu", millis()-time); //No targets 0-1ms; 1 target 16-24ms
