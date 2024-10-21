@@ -737,6 +737,10 @@ uart:
     sequence:
       # - lambda: UARTDebug::log_hex(direction, bytes, ' ');
       - lambda: |-
+          if(bytes.size() != 30) {
+            ESP_LOGE("lambda", "%hu", bytes.size());
+            return;
+          }
           unsigned long time = millis();
           bool update_entities = true;
           if ((time - id(mmwave_update_time)) <= 500) {
@@ -804,9 +808,9 @@ uart:
             else
               p1_y = -p1_y;
 
-            float p1_speed = *((int16_t *)(&bytes[8]));
+            int16_t p1_speed = *((int16_t *)(&bytes[8]));
             if (p1_speed < 0)
-              p1_speed += (int16_t)MIN_INT16_VAL;
+              p1_speed += MIN_INT16_VAL;
             else
               p1_speed = -p1_speed;
 
@@ -848,9 +852,9 @@ uart:
                 if (id(target1_y).state != p1_y) {
                   id(target1_y).publish_state(p1_y);
                 }
-                p1_speed /= 100.0;
-                if (id(target1_speed).state != p1_speed) {
-                  id(target1_speed).publish_state(p1_speed);
+                float p1_speed_float = p1_speed / 100.0;
+                if (id(target1_speed).state != p1_speed_float) {
+                  id(target1_speed).publish_state(p1_speed_float);
                 }
                 if (id(target1_resolution).state != p1_distance_resolution) {
                   id(target1_resolution).publish_state(p1_distance_resolution);
@@ -907,9 +911,9 @@ uart:
             else
               p2_y = -p2_y;
 
-            float p2_speed = *((int16_t *)(&bytes[16]));
+            int16_t p2_speed = *((int16_t *)(&bytes[16]));
             if (p2_speed < 0)
-              p2_speed += (int16_t)MIN_INT16_VAL;
+              p2_speed += MIN_INT16_VAL;
             else
               p2_speed = -p2_speed;
 
@@ -951,9 +955,9 @@ uart:
                 if (id(target2_y).state != p2_y) {
                   id(target2_y).publish_state(p2_y);
                 }
-                p2_speed /= 100.0;
-                if (id(target2_speed).state != p2_speed) {
-                  id(target2_speed).publish_state(p2_speed);
+                float p2_speed_float = p2_speed / 100.0;
+                if (id(target2_speed).state != p2_speed_float) {
+                  id(target2_speed).publish_state(p2_speed_float);
                 }
                 if (id(target2_resolution).state != p2_distance_resolution) {
                   id(target2_resolution).publish_state(p2_distance_resolution);
@@ -1010,9 +1014,9 @@ uart:
             else
               p3_y = -p3_y;
 
-            float p3_speed = *((int16_t *)(&bytes[24]));
+            int16_t p3_speed = *((int16_t *)(&bytes[24]));
             if (p3_speed < 0)
-              p3_speed += (int16_t)MIN_INT16_VAL;
+              p3_speed += MIN_INT16_VAL;
             else
               p3_speed = -p3_speed;
 
@@ -1054,9 +1058,9 @@ uart:
                 if (id(target3_y).state != p3_y) {
                   id(target3_y).publish_state(p3_y);
                 }
-                p3_speed /= 100.0;
-                if (id(target3_speed).state != p3_speed) {
-                  id(target3_speed).publish_state(p3_speed);
+                float p3_speed_float = p3_speed / 100.0;
+                if (id(target3_speed).state != p3_speed_float) {
+                  id(target3_speed).publish_state(p3_speed_float);
                 }
                 if (id(target3_resolution).state != p3_distance_resolution) {
                   id(target3_resolution).publish_state(p3_distance_resolution);
