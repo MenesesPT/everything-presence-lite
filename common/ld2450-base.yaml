@@ -525,7 +525,6 @@ number:
     min_value: -6000
     unit_of_measurement: "mm"
     step: 10
-    entity_category: config
     optimistic: True
     restore_value: True
   - platform: template
@@ -535,7 +534,6 @@ number:
     min_value: -6000
     unit_of_measurement: "mm"
     step: 10
-    entity_category: config
     optimistic: True
     restore_value: True
   - platform: template
@@ -545,7 +543,6 @@ number:
     min_value: -1560
     unit_of_measurement: "mm"
     step: 10
-    entity_category: config
     optimistic: True
     restore_value: True
   - platform: template
@@ -555,7 +552,6 @@ number:
     min_value: -1560
     unit_of_measurement: "mm"
     step: 10
-    entity_category: config
     optimistic: True
     restore_value: True
 
@@ -794,6 +790,7 @@ uart:
           bool p1_detected = p1_distance_resolution != 0;
           bool p2_detected = p2_distance_resolution != 0;
           bool p3_detected = p3_distance_resolution != 0;
+          bool masked = false;
 
           if (p1_detected) {
             int16_t p1_x = *((int16_t *)(&bytes[4]));
@@ -827,6 +824,7 @@ uart:
                 (p1_y >= occupancy_mask_1_begin_y_value && p1_y <= occupancy_mask_1_end_y_value)) {
                 occupancy_mask_1_count++;
                 p1_detected = false;
+                masked = true;
               } else {
                 if ((p1_x >= zone1_begin_x_value && p1_x <= zone1_end_x_value) &&
                     (p1_y >= zone1_begin_y_value && p1_y <= zone1_end_y_value)) {
@@ -872,29 +870,31 @@ uart:
               }
             } else {
               p1_detected = false;
-              if (update_entities) {
-                if (id(target1_x).state != 0) {
-                  id(target1_x).publish_state(0);
-                }
-                if (id(target1_y).state != 0) {
-                  id(target1_y).publish_state(0);
-                }
-                if (id(target1_speed).state != 0) {
-                  id(target1_speed).publish_state(0);
-                }
-                if (id(target1_resolution).state != 0) {
-                  id(target1_resolution).publish_state(0);
-                }
-                if (id(target1_distance).state != 0) {
-                  id(target1_distance).publish_state(0);
-                }
-                if (id(target1_angle).state != 0) {
-                  id(target1_angle).publish_state(0);
-                }
-                if (id(target1_active).state != false) {
-                  id(target1_active).publish_state(false);
-                }
-              }
+            }
+          }
+
+          if (update_entities && !p1_detected && !masked) {
+            masked = false;
+            if (id(target1_x).state != 0) {
+              id(target1_x).publish_state(0);
+            }
+            if (id(target1_y).state != 0) {
+              id(target1_y).publish_state(0);
+            }
+            if (id(target1_speed).state != 0) {
+              id(target1_speed).publish_state(0);
+            }
+            if (id(target1_resolution).state != 0) {
+              id(target1_resolution).publish_state(0);
+            }
+            if (id(target1_distance).state != 0) {
+              id(target1_distance).publish_state(0);
+            }
+            if (id(target1_angle).state != 0) {
+              id(target1_angle).publish_state(0);
+            }
+            if (id(target1_active).state != false) {
+              id(target1_active).publish_state(false);
             }
           }
 
@@ -930,6 +930,7 @@ uart:
                 (p2_y >= occupancy_mask_1_begin_y_value && p2_y <= occupancy_mask_1_end_y_value)) {
                 occupancy_mask_1_count++;
                 p2_detected = false;
+                masked = true;
               } else {
                 if ((p2_x >= zone1_begin_x_value && p2_x <= zone1_end_x_value) &&
                     (p2_y >= zone1_begin_y_value && p2_y <= zone1_end_y_value)) {
@@ -975,29 +976,30 @@ uart:
               }
             } else {
               p2_detected = false;
-              if (update_entities) {
-                if (id(target2_x).state != 0) {
-                  id(target2_x).publish_state(0);
-                }
-                if (id(target2_y).state != 0) {
-                  id(target2_y).publish_state(0);
-                }
-                if (id(target2_speed).state != 0) {
-                  id(target2_speed).publish_state(0);
-                }
-                if (id(target2_resolution).state != 0) {
-                  id(target2_resolution).publish_state(0);
-                }
-                if (id(target2_distance).state != 0) {
-                  id(target2_distance).publish_state(0);
-                }
-                if (id(target2_angle).state != 0) {
-                  id(target2_angle).publish_state(0);
-                }
-                if (id(target2_active).state != false) {
-                  id(target2_active).publish_state(false);
-                }
-              }
+            }
+          }
+          if (update_entities && !p2_detected && !masked) {
+            masked = false;
+            if (id(target2_x).state != 0) {
+              id(target2_x).publish_state(0);
+            }
+            if (id(target2_y).state != 0) {
+              id(target2_y).publish_state(0);
+            }
+            if (id(target2_speed).state != 0) {
+              id(target2_speed).publish_state(0);
+            }
+            if (id(target2_resolution).state != 0) {
+              id(target2_resolution).publish_state(0);
+            }
+            if (id(target2_distance).state != 0) {
+              id(target2_distance).publish_state(0);
+            }
+            if (id(target2_angle).state != 0) {
+              id(target2_angle).publish_state(0);
+            }
+            if (id(target2_active).state != false) {
+              id(target2_active).publish_state(false);
             }
           }
 
@@ -1033,6 +1035,7 @@ uart:
                 (p3_y >= occupancy_mask_1_begin_y_value && p3_y <= occupancy_mask_1_end_y_value)) {
                 occupancy_mask_1_count++;
                 p3_detected = false;
+                masked = true;
               } else {
                 if ((p3_x >= zone1_begin_x_value && p3_x <= zone1_end_x_value) &&
                     (p3_y >= zone1_begin_y_value && p3_y <= zone1_end_y_value)) {
@@ -1078,29 +1081,30 @@ uart:
               }
             } else {
               p3_detected = false;
-              if (update_entities) {
-                if (id(target3_x).state != 0) {
-                  id(target3_x).publish_state(0);
-                }
-                if (id(target3_y).state != 0) {
-                  id(target3_y).publish_state(0);
-                }
-                if (id(target3_speed).state != 0) {
-                  id(target3_speed).publish_state(0);
-                }
-                if (id(target3_resolution).state != 0) {
-                  id(target3_resolution).publish_state(0);
-                }
-                if (id(target3_distance).state != 0) {
-                  id(target3_distance).publish_state(0);
-                }
-                if (id(target3_angle).state != 0) {
-                  id(target3_angle).publish_state(0);
-                }
-                if (id(target3_active).state != false) {
-                  id(target3_active).publish_state(false);
-                }
-              }
+            }
+          }
+
+          if (update_entities && !p3_detected && !masked) {
+            if (id(target3_x).state != 0) {
+              id(target3_x).publish_state(0);
+            }
+            if (id(target3_y).state != 0) {
+              id(target3_y).publish_state(0);
+            }
+            if (id(target3_speed).state != 0) {
+              id(target3_speed).publish_state(0);
+            }
+            if (id(target3_resolution).state != 0) {
+              id(target3_resolution).publish_state(0);
+            }
+            if (id(target3_distance).state != 0) {
+              id(target3_distance).publish_state(0);
+            }
+            if (id(target3_angle).state != 0) {
+              id(target3_angle).publish_state(0);
+            }
+            if (id(target3_active).state != false) {
+              id(target3_active).publish_state(false);
             }
           }
 
