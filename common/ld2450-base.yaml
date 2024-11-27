@@ -164,16 +164,6 @@ binary_sensor:
       - delayed_off: !lambda return (id(zone_4_off_delay).state * 1000);
     disabled_by_default: true
 
-  - platform: template
-    name: 'Target 1 Active'
-    id: target1_active
-  - platform: template
-    name: 'Target 2 Active'
-    id: target2_active
-  - platform: template
-    name: 'Target 3 Active'
-    id: target3_active
-
 number:
   - platform: template
     name: 'Occupancy Off Delay'
@@ -453,43 +443,6 @@ number:
     optimistic: True
     restore_value: True
 
-  - platform: template
-    name: 'Occupancy Mask 1 Begin X'
-    id: occupancy_mask_1_begin_x
-    max_value: 6000
-    min_value: -6000
-    unit_of_measurement: 'mm'
-    step: 10
-    optimistic: True
-    restore_value: True
-  - platform: template
-    name: 'Occupancy Mask 1 End X'
-    id: occupancy_mask_1_end_x
-    max_value: 6000
-    min_value: -6000
-    unit_of_measurement: 'mm'
-    step: 10
-    optimistic: True
-    restore_value: True
-  - platform: template
-    name: 'Occupancy Mask 1 Begin Y'
-    id: occupancy_mask_1_begin_y
-    max_value: 6000
-    min_value: -1560
-    unit_of_measurement: 'mm'
-    step: 10
-    optimistic: True
-    restore_value: True
-  - platform: template
-    name: 'Occupancy Mask 1 End Y'
-    id: occupancy_mask_1_end_y
-    max_value: 6000
-    min_value: -1560
-    unit_of_measurement: 'mm'
-    step: 10
-    optimistic: True
-    restore_value: True
-
 sensor:
   - platform: template
     name: 'Target 1 X'
@@ -501,20 +454,6 @@ sensor:
   - platform: template
     name: 'Target 1 Y'
     id: target1_y
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    state_class: measurement
-    device_class: distance
-  - platform: template
-    name: 'Target 1 Speed'
-    id: target1_speed
-    accuracy_decimals: 2
-    unit_of_measurement: 'm/s'
-    state_class: measurement
-    device_class: speed
-  - platform: template
-    name: 'Target 1 Resolution'
-    id: target1_resolution
     accuracy_decimals: 0
     unit_of_measurement: 'mm'
     state_class: measurement
@@ -534,20 +473,6 @@ sensor:
     state_class: measurement
     device_class: distance
   - platform: template
-    name: 'Target 2 Speed'
-    id: target2_speed
-    accuracy_decimals: 2
-    unit_of_measurement: 'm/s'
-    state_class: measurement
-    device_class: speed
-  - platform: template
-    name: 'Target 2 Resolution'
-    id: target2_resolution
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    state_class: measurement
-    device_class: distance
-  - platform: template
     name: 'Target 3 X'
     id: target3_x
     accuracy_decimals: 0
@@ -557,59 +482,6 @@ sensor:
   - platform: template
     name: 'Target 3 Y'
     id: target3_y
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    state_class: measurement
-    device_class: distance
-  - platform: template
-    name: 'Target 3 Speed'
-    id: target3_speed
-    accuracy_decimals: 2
-    unit_of_measurement: 'm/s'
-    state_class: measurement
-    device_class: speed
-  - platform: template
-    name: 'Target 3 Resolution'
-    id: target3_resolution
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    state_class: measurement
-    device_class: distance
-  - platform: template
-    name: 'Target 1 Angle'
-    id: target1_angle
-    accuracy_decimals: 0
-    unit_of_measurement: '°'
-    state_class: measurement
-  - platform: template
-    name: 'Target 2 Angle'
-    id: target2_angle
-    accuracy_decimals: 0
-    unit_of_measurement: '°'
-    state_class: measurement
-  - platform: template
-    name: 'Target 3 Angle'
-    id: target3_angle
-    accuracy_decimals: 0
-    unit_of_measurement: '°'
-    state_class: measurement
-  - platform: template
-    name: 'Target 1 Distance'
-    id: target1_distance
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    state_class: measurement
-    device_class: distance
-  - platform: template
-    name: 'Target 2 Distance'
-    id: target2_distance
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    state_class: measurement
-    device_class: distance
-  - platform: template
-    name: 'Target 3 Distance'
-    id: target3_distance
     accuracy_decimals: 0
     unit_of_measurement: 'mm'
     state_class: measurement
@@ -674,7 +546,7 @@ uart:
           }
           unsigned long time = millis();
           bool update_entities = true;
-          if ((time - id(mmwave_update_time)) <= 500) {
+          if ((time - id(mmwave_update_time)) <= 1000) {
             update_entities = false;
           } else {
             id(mmwave_update_time) = time;
@@ -689,68 +561,54 @@ uart:
 
           // Extracted for consistency of read values
           int zone1_count = 0;
-          int zone1_begin_x_value = min(id(zone1_begin_x).state, id(zone1_end_x).state);
-          int zone1_end_x_value = max(id(zone1_begin_x).state, id(zone1_end_x).state);
-          int zone1_begin_y_value = min(id(zone1_begin_y).state, id(zone1_end_y).state);
-          int zone1_end_y_value = max(id(zone1_begin_y).state, id(zone1_end_y).state);
+          int zone1_begin_x_value = id(zone1_begin_x).state;
+          int zone1_end_x_value = id(zone1_end_x).state;
+          int zone1_begin_y_value = id(zone1_begin_y).state;
+          int zone1_end_y_value = id(zone1_end_y).state;
 
           int zone2_count = 0;
-          int zone2_begin_x_value = min(id(zone2_begin_x).state, id(zone2_end_x).state);
-          int zone2_end_x_value = max(id(zone2_begin_x).state, id(zone2_end_x).state);
-          int zone2_begin_y_value = min(id(zone2_begin_y).state, id(zone2_end_y).state);
-          int zone2_end_y_value = max(id(zone2_begin_y).state, id(zone2_end_y).state);
+          int zone2_begin_x_value = id(zone2_begin_x).state;
+          int zone2_end_x_value = id(zone2_end_x).state;
+          int zone2_begin_y_value = id(zone2_begin_y).state;
+          int zone2_end_y_value = id(zone2_end_y).state;
 
           int zone3_count = 0;
-          int zone3_begin_x_value = min(id(zone3_begin_x).state, id(zone3_end_x).state);
-          int zone3_end_x_value = max(id(zone3_begin_x).state, id(zone3_end_x).state);
-          int zone3_begin_y_value = min(id(zone3_begin_y).state, id(zone3_end_y).state);
-          int zone3_end_y_value = max(id(zone3_begin_y).state, id(zone3_end_y).state);
+          int zone3_begin_x_value = id(zone3_begin_x).state;
+          int zone3_end_x_value = id(zone3_end_x).state;
+          int zone3_begin_y_value = id(zone3_begin_y).state;
+          int zone3_end_y_value = id(zone3_end_y).state;
 
           int zone4_count = 0;
-          int zone4_begin_x_value = min(id(zone4_begin_x).state, id(zone4_end_x).state);
-          int zone4_end_x_value = max(id(zone4_begin_x).state, id(zone4_end_x).state);
-          int zone4_begin_y_value = min(id(zone4_begin_y).state, id(zone4_end_y).state);
-          int zone4_end_y_value = max(id(zone4_begin_y).state, id(zone4_end_y).state);
+          int zone4_begin_x_value = id(zone4_begin_x).state;
+          int zone4_end_x_value = id(zone4_end_x).state;
+          int zone4_begin_y_value = id(zone4_begin_y).state;
+          int zone4_end_y_value = id(zone4_end_y).state;
 
           int occupancy_mask_1_count = 0;
-          int occupancy_mask_1_begin_x_value = min(id(occupancy_mask_1_begin_x).state, id(occupancy_mask_1_end_x).state);
-          int occupancy_mask_1_end_x_value = max(id(occupancy_mask_1_begin_x).state, id(occupancy_mask_1_end_x).state);
-          int occupancy_mask_1_begin_y_value = min(id(occupancy_mask_1_begin_y).state, id(occupancy_mask_1_end_y).state);
-          int occupancy_mask_1_end_y_value = max(id(occupancy_mask_1_begin_y).state, id(occupancy_mask_1_end_y).state);
+          int occupancy_mask_1_begin_x_value = id(occupancy_mask_1_begin_x).state;
+          int occupancy_mask_1_end_x_value = id(occupancy_mask_1_end_x).state;
+          int occupancy_mask_1_begin_y_value = id(occupancy_mask_1_begin_y).state;
+          int occupancy_mask_1_end_y_value = id(occupancy_mask_1_end_y).state;
 
-          int16_t p1_distance_resolution = *((uint16_t *)(&bytes[10]));
-          int16_t p2_distance_resolution = *((uint16_t *)(&bytes[18]));
-          int16_t p3_distance_resolution = *((uint16_t *)(&bytes[26]));
-
-          bool p1_detected = p1_distance_resolution != 0;
-          bool p2_detected = p2_distance_resolution != 0;
-          bool p3_detected = p3_distance_resolution != 0;
+          bool p1_detected = *((uint16_t *)(&bytes[10])) != 0;
+          bool p2_detected = *((uint16_t *)(&bytes[18])) != 0;
+          bool p3_detected = *((uint16_t *)(&bytes[26])) != 0;
           bool masked = false;
 
           if (p1_detected) {
             int16_t p1_x = *((int16_t *)(&bytes[4]));
-            if (p1_x < 0)
-              p1_x += MIN_INT16_VAL;
-            else
-              p1_x = -p1_x;
+            if (p1_x < 0) p1_x += MIN_INT16_VAL;
+            else p1_x = -p1_x;
 
             int16_t p1_y = *((int16_t *)(&bytes[6]));
-            if (p1_y < 0)
-              p1_y += MIN_INT16_VAL;
-            else
-              p1_y = -p1_y;
+            if (p1_y < 0) p1_y += MIN_INT16_VAL;
+            else p1_y = -p1_y;
 
-            int16_t p1_speed = *((int16_t *)(&bytes[8]));
-            if (p1_speed < 0)
-              p1_speed += MIN_INT16_VAL;
-            else
-              p1_speed = -p1_speed;
-
-            float p1_angle = atan2(p1_y, p1_x);
             float p1_distance = sqrt(p1_x * p1_x + p1_y * p1_y);
 
             if (p1_distance > 0 && p1_distance <= max_distance) {
               if (installation_angle != 0) {
+                float p1_angle = atan2(p1_y, p1_x);
                 float angle = p1_angle - installation_angle;
                 p1_x = p1_distance * cos(angle);
                 p1_y = p1_distance * sin(angle);
@@ -785,23 +643,6 @@ uart:
                 if (id(target1_y).state != p1_y) {
                   id(target1_y).publish_state(p1_y);
                 }
-                float p1_speed_float = p1_speed / 100.0;
-                if (id(target1_speed).state != p1_speed_float) {
-                  id(target1_speed).publish_state(p1_speed_float);
-                }
-                if (id(target1_resolution).state != p1_distance_resolution) {
-                  id(target1_resolution).publish_state(p1_distance_resolution);
-                }
-                if (id(target1_distance).state != p1_distance) {
-                  id(target1_distance).publish_state(p1_distance);
-                }
-                p1_angle = (p1_angle * RADIANS_TO_DEGREES) - 90;
-                if (id(target1_angle).state != p1_angle) {
-                  id(target1_angle).publish_state(p1_angle);
-                }
-                if (id(target1_active).state != true) {
-                  id(target1_active).publish_state(true);
-                }
               }
             } else {
               p1_detected = false;
@@ -816,47 +657,22 @@ uart:
             if (id(target1_y).state != 0) {
               id(target1_y).publish_state(0);
             }
-            if (id(target1_speed).state != 0) {
-              id(target1_speed).publish_state(0);
-            }
-            if (id(target1_resolution).state != 0) {
-              id(target1_resolution).publish_state(0);
-            }
-            if (id(target1_distance).state != 0) {
-              id(target1_distance).publish_state(0);
-            }
-            if (id(target1_angle).state != 0) {
-              id(target1_angle).publish_state(0);
-            }
-            if (id(target1_active).state != false) {
-              id(target1_active).publish_state(false);
-            }
           }
 
           if (p2_detected) {
             int16_t p2_x = *((int16_t *)(&bytes[12]));
-            if (p2_x < 0)
-              p2_x += MIN_INT16_VAL;
-            else
-              p2_x = -p2_x;
+            if (p2_x < 0) p2_x += MIN_INT16_VAL;
+            else p2_x = -p2_x;
 
             int16_t p2_y = *((int16_t *)(&bytes[14]));
-            if (p2_y < 0)
-              p2_y += MIN_INT16_VAL;
-            else
-              p2_y = -p2_y;
+            if (p2_y < 0) p2_y += MIN_INT16_VAL;
+            else p2_y = -p2_y;
 
-            int16_t p2_speed = *((int16_t *)(&bytes[16]));
-            if (p2_speed < 0)
-              p2_speed += MIN_INT16_VAL;
-            else
-              p2_speed = -p2_speed;
-
-            float p2_angle = atan2(p2_y, p2_x);
             float p2_distance = sqrt(p2_x * p2_x + p2_y * p2_y);
 
             if (p2_distance > 0 && p2_distance <= max_distance) {
               if (installation_angle != 0) {
+                float p2_angle = atan2(p2_y, p2_x);
                 float angle = p2_angle - installation_angle;
                 p2_x = p2_distance * cos(angle);
                 p2_y = p2_distance * sin(angle);
@@ -891,23 +707,6 @@ uart:
                 if (id(target2_y).state != p2_y) {
                   id(target2_y).publish_state(p2_y);
                 }
-                float p2_speed_float = p2_speed / 100.0;
-                if (id(target2_speed).state != p2_speed_float) {
-                  id(target2_speed).publish_state(p2_speed_float);
-                }
-                if (id(target2_resolution).state != p2_distance_resolution) {
-                  id(target2_resolution).publish_state(p2_distance_resolution);
-                }
-                if (id(target2_distance).state != p2_distance) {
-                  id(target2_distance).publish_state(p2_distance);
-                }
-                p2_angle = (p2_angle * RADIANS_TO_DEGREES) - 90;
-                if (id(target2_angle).state != p2_angle) {
-                  id(target2_angle).publish_state(p2_angle);
-                }
-                if (id(target2_active).state != true) {
-                  id(target2_active).publish_state(true);
-                }
               }
             } else {
               p2_detected = false;
@@ -921,29 +720,12 @@ uart:
             if (id(target2_y).state != 0) {
               id(target2_y).publish_state(0);
             }
-            if (id(target2_speed).state != 0) {
-              id(target2_speed).publish_state(0);
-            }
-            if (id(target2_resolution).state != 0) {
-              id(target2_resolution).publish_state(0);
-            }
-            if (id(target2_distance).state != 0) {
-              id(target2_distance).publish_state(0);
-            }
-            if (id(target2_angle).state != 0) {
-              id(target2_angle).publish_state(0);
-            }
-            if (id(target2_active).state != false) {
-              id(target2_active).publish_state(false);
-            }
           }
 
           if (p3_detected) {
             int16_t p3_x = *((int16_t *)(&bytes[20]));
-            if (p3_x < 0)
-              p3_x += MIN_INT16_VAL;
-            else
-              p3_x = -p3_x;
+            if (p3_x < 0) p3_x += MIN_INT16_VAL;
+            else p3_x = -p3_x;
 
             int16_t p3_y = *((int16_t *)(&bytes[22]));
             if (p3_y < 0)
@@ -951,17 +733,11 @@ uart:
             else
               p3_y = -p3_y;
 
-            int16_t p3_speed = *((int16_t *)(&bytes[24]));
-            if (p3_speed < 0)
-              p3_speed += MIN_INT16_VAL;
-            else
-              p3_speed = -p3_speed;
-
-            float p3_angle = atan2(p3_y, p3_x);
             float p3_distance = sqrt(p3_x * p3_x + p3_y * p3_y);
 
             if (p3_distance > 0 && p3_distance <= max_distance) {
               if (installation_angle != 0) {
+                float p3_angle = atan2(p3_y, p3_x);
                 float angle = p3_angle - installation_angle;
                 p3_x = p3_distance * cos(angle);
                 p3_y = p3_distance * sin(angle);
@@ -996,23 +772,6 @@ uart:
                 if (id(target3_y).state != p3_y) {
                   id(target3_y).publish_state(p3_y);
                 }
-                float p3_speed_float = p3_speed / 100.0;
-                if (id(target3_speed).state != p3_speed_float) {
-                  id(target3_speed).publish_state(p3_speed_float);
-                }
-                if (id(target3_resolution).state != p3_distance_resolution) {
-                  id(target3_resolution).publish_state(p3_distance_resolution);
-                }
-                if (id(target3_distance).state != p3_distance) {
-                  id(target3_distance).publish_state(p3_distance);
-                }
-                p3_angle = (p3_angle * RADIANS_TO_DEGREES) - 90;
-                if (id(target3_angle).state != p3_angle) {
-                  id(target3_angle).publish_state(p3_angle);
-                }
-                if (id(target3_active).state != true) {
-                  id(target3_active).publish_state(true);
-                }
               }
             } else {
               p3_detected = false;
@@ -1026,23 +785,7 @@ uart:
             if (id(target3_y).state != 0) {
               id(target3_y).publish_state(0);
             }
-            if (id(target3_speed).state != 0) {
-              id(target3_speed).publish_state(0);
-            }
-            if (id(target3_resolution).state != 0) {
-              id(target3_resolution).publish_state(0);
-            }
-            if (id(target3_distance).state != 0) {
-              id(target3_distance).publish_state(0);
-            }
-            if (id(target3_angle).state != 0) {
-              id(target3_angle).publish_state(0);
-            }
-            if (id(target3_active).state != false) {
-              id(target3_active).publish_state(false);
-            }
           }
-
 
           if (p1_detected || p2_detected || p3_detected) {
             id(occupancy).publish_state(true);
