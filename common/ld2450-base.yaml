@@ -846,7 +846,7 @@ uart:
     mode:
       input: true
       pullup: true
-  baud_rate: 9600
+  baud_rate: 19200
   parity: NONE
   stop_bits: 1
   data_bits: 8
