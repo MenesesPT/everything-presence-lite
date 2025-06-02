@@ -865,6 +865,7 @@ uart:
 
           if (bytes.size() != 30) {
             ESP_LOGW("LD2450", "Expected 30 bytes but received %hu!", bytes.size());
+            UARTDebug::log_hex(direction, bytes, ' ');
             return;
           }
 
