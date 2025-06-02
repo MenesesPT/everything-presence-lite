@@ -726,6 +726,33 @@ sensor:
     unit_of_measurement: " "
 
 select:
+  - id: change_baud_rate
+    name: Baud rate
+    platform: template
+    options:
+      - "9600"
+      - "19200"
+      - "38400"
+      - "57600"
+      - "115200"
+      - "230400"
+      - "256000"
+      - "460800"
+    initial_option: "256000"
+    optimistic: true
+    restore_value: True
+    internal: false
+    entity_category: config
+    icon: mdi:swap-horizontal
+    set_action:
+      - lambda: |-
+          id(uart_bus).flush();
+          uint32_t new_baud_rate = stoi(x);
+          ESP_LOGD("change_baud_rate", "Changing baud rate from %i to %i",id(uart_bus).get_baud_rate(), new_baud_rate);
+          if (id(uart_bus).get_baud_rate() != new_baud_rate) {
+            id(uart_bus).set_baud_rate(new_baud_rate);
+            id(uart_bus).load_settings();
+          }
   - platform: template
     name: 'Update speed'
     icon: 'mdi:speedometer'
@@ -846,7 +873,7 @@ uart:
     mode:
       input: true
       pullup: true
-  baud_rate: 19200
+  baud_rate: 256000
   parity: NONE
   stop_bits: 1
   data_bits: 8
