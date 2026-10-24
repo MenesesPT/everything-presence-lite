@@ -3,12 +3,6 @@ esphome:
     priority: -100
     then:
       - button.press: get_mmwave_firmware
-      - text_sensor.template.publish:
-          id: entry_exit_last_decision
-          state: "Idle"
-      - text_sensor.template.publish:
-          id: entry_exit_last_zone
-          state: "None"
       - binary_sensor.template.publish:
           id: zone1_occupancy
           state: false 
@@ -50,26 +44,6 @@ globals:
     type: unsigned int
     restore_value: False
     initial_value: '0'
-  - id: assumed_present_until_ms
-    type: unsigned long
-    restore_value: False
-    initial_value: '0'
-  - id: assumed_present_active
-    type: bool
-    restore_value: False
-    initial_value: 'false'
-  - id: last_zone_hold
-    type: int
-    restore_value: False
-    initial_value: '0'
-  - id: last_target_x_mm
-    type: float
-    restore_value: False
-    initial_value: '0'
-  - id: last_target_y_mm
-    type: float
-    restore_value: False
-    initial_value: '0'
   - id: poly_zone_1_points
     type: std::vector<float>
     restore_value: False
@@ -94,23 +68,14 @@ globals:
     type: std::vector<float>
     restore_value: False
     initial_value: 'std::vector<float>()'
-  - id: poly_entry_1_points
-    type: std::vector<float>
-    restore_value: False
-    initial_value: 'std::vector<float>()'
-  - id: poly_entry_2_points
-    type: std::vector<float>
-    restore_value: False
-    initial_value: 'std::vector<float>()'
-
 
 interval:
   - interval: 1s
     then:
       - lambda: |-
-          unsigned long now = millis();
-          unsigned long timeout_ms = (unsigned long)(id(aggressive_timeout).state * 1000);
           if (id(aggressive_target_clearing).state) {
+            unsigned long now = millis();
+            unsigned long timeout_ms = (unsigned long)(id(aggressive_timeout).state * 1000);
             if ((now - id(target1_last_update)) > timeout_ms) {
               if (id(target1_reset) == 0) {
                 if (id(target1_active).state == true) {
@@ -128,16 +93,6 @@ text_sensor:
     name: "mmWave Firmware"
     id: "firmware_version"
     entity_category: diagnostic
-  - platform: template
-    name: "Entry Exit Last Decision"
-    id: entry_exit_last_decision
-    entity_category: diagnostic
-    disabled_by_default: true
-  - platform: template
-    name: "Entry Exit Last Entry Zone"
-    id: entry_exit_last_zone
-    entity_category: diagnostic
-    disabled_by_default: true
 
 button:
   - platform: template
@@ -256,13 +211,6 @@ switch:
     entity_category: config
     icon: "mdi:rotate-180"
 
-  - platform: template
-    name: "Entry Exit Enabled"
-    id: entry_exit_enabled
-    restore_mode: RESTORE_DEFAULT_OFF
-    optimistic: true
-    entity_category: config
-
 binary_sensor:
   - platform: template
     name: "Occupancy"
@@ -311,10 +259,6 @@ binary_sensor:
     name: "Target 3 Active"
     id: target3_active
     entity_category: diagnostic
-  - platform: template
-    name: "Assumed Present"
-    id: assumed_present
-    entity_category: diagnostic
 
 number:
   - platform: template
@@ -353,29 +297,6 @@ number:
     icon: "mdi:angle-acute"
     entity_category: config
 
-  - platform: template
-    name: "Exit Threshold Pct"
-    id: exit_threshold_pct
-    min_value: 0
-    max_value: 100
-    step: 1
-    optimistic: true
-    restore_value: true
-    initial_value: 10
-    unit_of_measurement: "%"
-    entity_category: config
-
-  - platform: template
-    name: "Assume Present Timeout"
-    id: assume_present_timeout_s
-    min_value: 0
-    max_value: 43200
-    step: 1
-    optimistic: true
-    restore_value: true
-    initial_value: 1800
-    unit_of_measurement: "s"
-    entity_category: config
 
   - platform: template
     name: "Zone 1 Occupancy Off Delay"
@@ -427,7 +348,6 @@ number:
     initial_value: 15
     disabled_by_default: true
     entity_category: config
-
   - platform: template
     name: "Stale Target Reset Timeout"
     id: aggressive_timeout
@@ -441,29 +361,6 @@ number:
     entity_category: config
 
 sensor:
-  - platform: template
-    name: "Assumed Present Remaining"
-    id: assumed_present_remaining_s
-    unit_of_measurement: "s"
-    accuracy_decimals: 0
-    update_interval: never
-    entity_category: diagnostic
-  - platform: template
-    name: "Entry Exit Last Target X"
-    id: entry_exit_last_target_x
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    update_interval: never
-    entity_category: diagnostic
-    disabled_by_default: true
-  - platform: template
-    name: "Entry Exit Last Target Y"
-    id: entry_exit_last_target_y
-    accuracy_decimals: 0
-    unit_of_measurement: 'mm'
-    update_interval: never
-    entity_category: diagnostic
-    disabled_by_default: true
   - platform: template
     name: "Target 1 X"
     id: target1_x
@@ -932,64 +829,7 @@ text:
               }
             }
             id(poly_exclusion_2_points) = points;
-  - platform: template
-    name: "Polygon Entry 1"
-    id: poly_entry_1
-    mode: text
-    optimistic: true
-    restore_value: true
-    initial_value: ""
-    disabled_by_default: false
-    entity_category: config
-    icon: "mdi:vector-polygon"
-    on_value:
-      then:
-        - lambda: |-
-            std::vector<float> points;
-            points.reserve(40);
-            size_t pos = 0;
-            while (pos < x.length() && points.size() < 40) {
-              int px, py;
-              int chars_read = 0;
-              if (sscanf(x.c_str() + pos, "%d:%d%n", &px, &py, &chars_read) == 2) {
-                points.push_back((float) px);
-                points.push_back((float) py);
-                pos += chars_read;
-                if (pos < x.length() && x[pos] == ';') pos++;
-              } else {
-                break;
-              }
-            }
-            id(poly_entry_1_points) = points;
-  - platform: template
-    name: "Polygon Entry 2"
-    id: poly_entry_2
-    mode: text
-    optimistic: true
-    restore_value: true
-    initial_value: ""
-    disabled_by_default: false
-    entity_category: config
-    icon: "mdi:vector-polygon"
-    on_value:
-      then:
-        - lambda: |-
-            std::vector<float> points;
-            points.reserve(40);
-            size_t pos = 0;
-            while (pos < x.length() && points.size() < 40) {
-              int px, py;
-              int chars_read = 0;
-              if (sscanf(x.c_str() + pos, "%d:%d%n", &px, &py, &chars_read) == 2) {
-                points.push_back((float) px);
-                points.push_back((float) py);
-                pos += chars_read;
-                if (pos < x.length() && x[pos] == ';') pos++;
-              } else {
-                break;
-              }
-            }
-            id(poly_entry_2_points) = points;
+
 
 uart:
   id: uart_bus
@@ -1041,7 +881,6 @@ uart:
           float max_distance = float(id(distance).state) * 10;
           float installation_angle = id(installation_angle_ui).state * DEGREES_TO_RADIANS;
 
-          static unsigned long assumed_present_until = 0;
           static bool prev_detected[3] = {false,false,false};
           auto point_in_poly = [](float px, float py, const std::vector<float>& points) -> bool {
             const size_t point_count = points.size() / 2;
@@ -1111,19 +950,15 @@ uart:
               } else {
                 if (point_in_poly(p1_x, p1_y, id(poly_zone_1_points))) {
                   zone1_count++;
-                  id(last_zone_hold) = 1;
                 }
                 if (point_in_poly(p1_x, p1_y, id(poly_zone_2_points))) {
                   zone2_count++;
-                  id(last_zone_hold) = 2;
                 }
                 if (point_in_poly(p1_x, p1_y, id(poly_zone_3_points))) {
                   zone3_count++;
-                  id(last_zone_hold) = 3;
                 }
                 if (point_in_poly(p1_x, p1_y, id(poly_zone_4_points))) {
                   zone4_count++;
-                  id(last_zone_hold) = 4;
                 }
               }
               if (update_entities) {
@@ -1165,51 +1000,39 @@ uart:
                     if (id(target1_y).state != p1_y) {
                       id(target1_y).publish_state(p1_y);
                     }
-                    id(last_target_x_mm) = p1_x;
-                    id(last_target_y_mm) = p1_y;
                 }
               }
             }
           }
 
-          bool any_now = p1_detected || p2_detected || p3_detected;
           if (update_entities && !p1_detected && !target_masked) {
-            bool preventClear = id(entry_exit_enabled).state && !any_now && prev_detected[0];
             switch (id(extra_entities)) {
               case 5:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear) {
-                  if (id(target1_speed).state != 0) {
-                    id(target1_speed).publish_state(0);
-                  }
-                  if (id(target1_resolution).state != 0) {
-                    id(target1_resolution).publish_state(0);
-                  }
+                if (id(target1_speed).state != 0) {
+                  id(target1_speed).publish_state(0);
+                }
+                if (id(target1_resolution).state != 0) {
+                  id(target1_resolution).publish_state(0);
                 }
                 [[fallthrough]];
               case 4:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear) {
-                  if (id(target1_distance).state != 0) {
-                    id(target1_distance).publish_state(0);
-                  }
-                  if (id(target1_angle).state != 0) {
-                    id(target1_angle).publish_state(0);
-                  }
+                if (id(target1_distance).state != 0) {
+                  id(target1_distance).publish_state(0);
+                }
+                if (id(target1_angle).state != 0) {
+                  id(target1_angle).publish_state(0);
                 }
                 [[fallthrough]];
               case 3:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear) {
-                  id(target1_active).publish_state(false);
-                }
+                id(target1_active).publish_state(false);
                 [[fallthrough]];
               case 2:
               case 1:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear) {
-                  if (id(target1_x).state != 0) {
-                    id(target1_x).publish_state(0);
-                  }
-                  if (id(target1_y).state != 0) {
-                    id(target1_y).publish_state(0);
-                  }
+                if (id(target1_x).state != 0) {
+                  id(target1_x).publish_state(0);
+                }
+                if (id(target1_y).state != 0) {
+                  id(target1_y).publish_state(0);
                 }
             }
           }
@@ -1252,10 +1075,10 @@ uart:
                 p2_detected = false;
                 target_masked = true;
               } else {
-                if (point_in_poly(p2_x, p2_y, id(poly_zone_1_points))) { zone1_count++; id(last_zone_hold) = 1; }
-                if (point_in_poly(p2_x, p2_y, id(poly_zone_2_points))) { zone2_count++; id(last_zone_hold) = 2; }
-                if (point_in_poly(p2_x, p2_y, id(poly_zone_3_points))) { zone3_count++; id(last_zone_hold) = 3; }
-                if (point_in_poly(p2_x, p2_y, id(poly_zone_4_points))) { zone4_count++; id(last_zone_hold) = 4; }
+                if (point_in_poly(p2_x, p2_y, id(poly_zone_1_points))) { zone1_count++; }
+                if (point_in_poly(p2_x, p2_y, id(poly_zone_2_points))) { zone2_count++; }
+                if (point_in_poly(p2_x, p2_y, id(poly_zone_3_points))) { zone3_count++; }
+                if (point_in_poly(p2_x, p2_y, id(poly_zone_4_points))) { zone4_count++; }
               }
               if (update_entities) {
                 switch (id(extra_entities)) {
@@ -1296,50 +1119,39 @@ uart:
                     if (id(target2_y).state != p2_y) {
                       id(target2_y).publish_state(p2_y);
                     }
-                    id(last_target_x_mm) = p2_x;
-                    id(last_target_y_mm) = p2_y;
                 }
               }
             }
           }
 
           if (update_entities && !p2_detected && !target_masked) {
-            bool preventClear2 = id(entry_exit_enabled).state && !any_now && prev_detected[1];
             switch (id(extra_entities)) {
               case 5:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear2) {
-                  if (id(target2_speed).state != 0) {
-                    id(target2_speed).publish_state(0);
-                  }
-                  if (id(target2_resolution).state != 0) {
-                    id(target2_resolution).publish_state(0);
-                  }
+                if (id(target2_speed).state != 0) {
+                  id(target2_speed).publish_state(0);
+                }
+                if (id(target2_resolution).state != 0) {
+                  id(target2_resolution).publish_state(0);
                 }
                 [[fallthrough]];
               case 4:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear2) {
-                  if (id(target2_distance).state != 0) {
-                    id(target2_distance).publish_state(0);
-                  }
-                  if (id(target2_angle).state != 0) {
-                    id(target2_angle).publish_state(0);
-                  }
+                if (id(target2_distance).state != 0) {
+                  id(target2_distance).publish_state(0);
+                }
+                if (id(target2_angle).state != 0) {
+                  id(target2_angle).publish_state(0);
                 }
                 [[fallthrough]];
               case 3:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear2) {
-                  id(target2_active).publish_state(false);
-                }
+                id(target2_active).publish_state(false);
                 [[fallthrough]];
               case 2:
               case 1:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear2) {
-                  if (id(target2_x).state != 0) {
-                    id(target2_x).publish_state(0);
-                  }
-                  if (id(target2_y).state != 0) {
-                    id(target2_y).publish_state(0);
-                  }
+                if (id(target2_x).state != 0) {
+                  id(target2_x).publish_state(0);
+                }
+                if (id(target2_y).state != 0) {
+                  id(target2_y).publish_state(0);
                 }
             }
           }
@@ -1382,10 +1194,10 @@ uart:
                 p3_detected = false;
                 target_masked = true;
               } else {
-                if (point_in_poly(p3_x, p3_y, id(poly_zone_1_points))) { zone1_count++; id(last_zone_hold) = 1; }
-                if (point_in_poly(p3_x, p3_y, id(poly_zone_2_points))) { zone2_count++; id(last_zone_hold) = 2; }
-                if (point_in_poly(p3_x, p3_y, id(poly_zone_3_points))) { zone3_count++; id(last_zone_hold) = 3; }
-                if (point_in_poly(p3_x, p3_y, id(poly_zone_4_points))) { zone4_count++; id(last_zone_hold) = 4; }
+                if (point_in_poly(p3_x, p3_y, id(poly_zone_1_points))) { zone1_count++; }
+                if (point_in_poly(p3_x, p3_y, id(poly_zone_2_points))) { zone2_count++; }
+                if (point_in_poly(p3_x, p3_y, id(poly_zone_3_points))) { zone3_count++; }
+                if (point_in_poly(p3_x, p3_y, id(poly_zone_4_points))) { zone4_count++; }
               }
               if (update_entities) {
                 switch (id(extra_entities)) {
@@ -1426,50 +1238,39 @@ uart:
                     if (id(target3_y).state != p3_y) {
                       id(target3_y).publish_state(p3_y);
                     }
-                    id(last_target_x_mm) = p3_x;
-                    id(last_target_y_mm) = p3_y;
                 }
               }
             }
           }
 
           if (update_entities && !p3_detected && !target_masked) {
-            bool preventClear3 = id(entry_exit_enabled).state && !any_now && prev_detected[2];
             switch (id(extra_entities)) {
               case 5:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear3) {
-                  if (id(target3_speed).state != 0) {
-                    id(target3_speed).publish_state(0);
-                  }
-                  if (id(target3_resolution).state != 0) {
-                    id(target3_resolution).publish_state(0);
-                  }
+                if (id(target3_speed).state != 0) {
+                  id(target3_speed).publish_state(0);
+                }
+                if (id(target3_resolution).state != 0) {
+                  id(target3_resolution).publish_state(0);
                 }
                 [[fallthrough]];
               case 4:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear3) {
-                  if (id(target3_distance).state != 0) {
-                    id(target3_distance).publish_state(0);
-                  }
-                  if (id(target3_angle).state != 0) {
-                    id(target3_angle).publish_state(0);
-                  }
+                if (id(target3_distance).state != 0) {
+                  id(target3_distance).publish_state(0);
+                }
+                if (id(target3_angle).state != 0) {
+                  id(target3_angle).publish_state(0);
                 }
                 [[fallthrough]];
               case 3:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear3) {
-                  id(target3_active).publish_state(false);
-                }
+                id(target3_active).publish_state(false);
                 [[fallthrough]];
               case 2:
               case 1:
-                if (!(assumed_present_until != 0 && millis() < assumed_present_until) && !preventClear3) {
-                  if (id(target3_x).state != 0) {
-                    id(target3_x).publish_state(0);
-                  }
-                  if (id(target3_y).state != 0) {
-                    id(target3_y).publish_state(0);
-                  }
+                if (id(target3_x).state != 0) {
+                  id(target3_x).publish_state(0);
+                }
+                if (id(target3_y).state != 0) {
+                  id(target3_y).publish_state(0);
                 }
             }
           }
@@ -1495,155 +1296,13 @@ uart:
             }
           }
 
-          // Clear last_zone_hold if targets are detected but not in any zone
-          // This prevents stale zone data from being used when assumed presence triggers
-          bool in_any_zone = (zone1_count > 0 || zone2_count > 0 || zone3_count > 0 || zone4_count > 0);
-          if (any_now && !in_any_zone) {
-            id(last_zone_hold) = 0;
-          }
-
-          static const int BUF_SZ = 600;
-          struct Sample { unsigned long t; float x; float y; };
-          static Sample hist[3][BUF_SZ];
-          static uint16_t head[3] = {0,0,0};
-
-          unsigned long now_ms = millis();
-          if (p1_detected) { head[0] = (head[0] + 1) % BUF_SZ; hist[0][head[0]].t = now_ms; hist[0][head[0]].x = id(target1_x).state; hist[0][head[0]].y = id(target1_y).state; }
-          if (p2_detected) { head[1] = (head[1] + 1) % BUF_SZ; hist[1][head[1]].t = now_ms; hist[1][head[1]].x = id(target2_x).state; hist[1][head[1]].y = id(target2_y).state; }
-          if (p3_detected) { head[2] = (head[2] + 1) % BUF_SZ; hist[2][head[2]].t = now_ms; hist[2][head[2]].x = id(target3_x).state; hist[2][head[2]].y = id(target3_y).state; }
-
-          bool detected_now[3] = {p1_detected, p2_detected, p3_detected};
           bool any_detected_now = p1_detected || p2_detected || p3_detected;
-          bool had_hold = (assumed_present_until != 0 && now_ms < assumed_present_until);
-          if (any_detected_now) {
-            if (had_hold) {
-              id(entry_exit_last_decision).publish_state("Target Reacquired");
-              id(entry_exit_last_zone).publish_state("None");
-            }
-            assumed_present_until = 0;
-          }
+          id(occupancy).publish_state(any_detected_now);
 
-          if (id(entry_exit_enabled).state) {
-            const unsigned long window_ms = 30000;
-
-            if (!any_detected_now) {
-              for (int i = 0; i < 3; i++) {
-                if (prev_detected[i] && !detected_now[i]) {
-                  bool e1_valid = id(poly_entry_1_points).size() >= 6;
-                  bool e2_valid = id(poly_entry_2_points).size() >= 6;
-                  bool last_in_e1 = false;
-                  bool last_in_e2 = false;
-                  bool crossed_into_e1 = false;
-                  bool crossed_into_e2 = false;
-                  bool saw_outside_e1 = false;
-                  bool saw_outside_e2 = false;
-
-                  if (hist[i][head[i]].t != 0) {
-                    if (e1_valid) last_in_e1 = point_in_poly(hist[i][head[i]].x, hist[i][head[i]].y, id(poly_entry_1_points));
-                    if (e2_valid) last_in_e2 = point_in_poly(hist[i][head[i]].x, hist[i][head[i]].y, id(poly_entry_2_points));
-                  }
-
-                  if (e1_valid) {
-                    uint16_t ii = head[i];
-                    unsigned int steps = 0;
-                    while (steps < BUF_SZ) {
-                      uint16_t jj = (ii + BUF_SZ - 1) % BUF_SZ;
-                      const Sample &a = hist[i][jj];
-                      const Sample &b = hist[i][ii];
-                      if (b.t == 0 || a.t == 0) break;
-                      if (now_ms - b.t > window_ms) break;
-                      bool a_in_e1 = point_in_poly(a.x, a.y, id(poly_entry_1_points));
-                      bool b_in_e1 = point_in_poly(b.x, b.y, id(poly_entry_1_points));
-                      if (!a_in_e1 || !b_in_e1) {
-                        saw_outside_e1 = true;
-                      }
-                      if (!a_in_e1 && b_in_e1) {
-                        crossed_into_e1 = true;
-                        break;
-                      }
-                      ii = jj; steps++;
-                    }
-                  }
-                  if (e2_valid) {
-                    uint16_t ii2 = head[i];
-                    unsigned int steps2 = 0;
-                    while (steps2 < BUF_SZ) {
-                      uint16_t jj2 = (ii2 + BUF_SZ - 1) % BUF_SZ;
-                      const Sample &a2 = hist[i][jj2];
-                      const Sample &b2 = hist[i][ii2];
-                      if (b2.t == 0 || a2.t == 0) break;
-                      if (now_ms - b2.t > window_ms) break;
-                      bool a_in_e2 = point_in_poly(a2.x, a2.y, id(poly_entry_2_points));
-                      bool b_in_e2 = point_in_poly(b2.x, b2.y, id(poly_entry_2_points));
-                      if (!a_in_e2 || !b_in_e2) {
-                        saw_outside_e2 = true;
-                      }
-                      if (!a_in_e2 && b_in_e2) {
-                        crossed_into_e2 = true;
-                        break;
-                      }
-                      ii2 = jj2; steps2++;
-                    }
-                  }
-                  bool exit_e1 = e1_valid && last_in_e1 && (crossed_into_e1 || saw_outside_e1);
-                  bool exit_e2 = e2_valid && last_in_e2 && (crossed_into_e2 || saw_outside_e2);
-                  bool valid_exit = exit_e1 || exit_e2;
-                  const char *decision_zone = "None";
-                  if (exit_e1 && exit_e2) {
-                    decision_zone = "Both";
-                  } else if (exit_e1) {
-                    decision_zone = "Entry 1";
-                  } else if (exit_e2) {
-                    decision_zone = "Entry 2";
-                  } else if (e1_valid || e2_valid) {
-                    decision_zone = "Unknown";
-                  }
-                  id(entry_exit_last_target_x).publish_state(id(last_target_x_mm));
-                  id(entry_exit_last_target_y).publish_state(id(last_target_y_mm));
-                  if (!valid_exit) {
-                    unsigned long hold_ms = (unsigned long) (id(assume_present_timeout_s).state * 1000.0f);
-                    if (hold_ms > 0) {
-                      assumed_present_until = now_ms + hold_ms;
-                      id(entry_exit_last_decision).publish_state("Hold Started");
-                      id(entry_exit_last_zone).publish_state(decision_zone);
-                    }
-                  } else {
-                    id(entry_exit_last_decision).publish_state("Valid Exit");
-                    id(entry_exit_last_zone).publish_state(decision_zone);
-                  }
-                  break;
-                }
-              }
-            }
-          }
-
-          bool occ_now = any_detected_now;
-          if (!occ_now && id(entry_exit_enabled).state) {
-            if (assumed_present_until != 0 && millis() < assumed_present_until) {
-              occ_now = true;
-            }
-          }
-          id(occupancy).publish_state(occ_now);
-          bool hold_active = (assumed_present_until != 0 && millis() < assumed_present_until);
-          id(assumed_present_active) = hold_active;
-          id(assumed_present_until_ms) = assumed_present_until;
-          id(assumed_present).publish_state(hold_active);
-          if (hold_active) {
-            float remain = (assumed_present_until - millis()) / 1000.0f;
-            if (remain < 0) remain = 0;
-            id(assumed_present_remaining_s).publish_state(remain);
-          } else {
-            id(assumed_present_remaining_s).publish_state(0);
-          }
-          if (had_hold && !hold_active && !any_detected_now) {
-            id(entry_exit_last_decision).publish_state("Hold Expired");
-            id(entry_exit_last_zone).publish_state("None");
-          }
-          bool hold_active2 = (assumed_present_until != 0 && millis() < assumed_present_until);
-          bool z1 = zone1_count > 0; if (hold_active2 && id(last_zone_hold) == 1) z1 = true;
-          bool z2 = zone2_count > 0; if (hold_active2 && id(last_zone_hold) == 2) z2 = true;
-          bool z3 = zone3_count > 0; if (hold_active2 && id(last_zone_hold) == 3) z3 = true;
-          bool z4 = zone4_count > 0; if (hold_active2 && id(last_zone_hold) == 4) z4 = true;
+          bool z1 = zone1_count > 0;
+          bool z2 = zone2_count > 0;
+          bool z3 = zone3_count > 0;
+          bool z4 = zone4_count > 0;
           id(zone1_occupancy).publish_state(z1);
           id(zone2_occupancy).publish_state(z2);
           id(zone3_occupancy).publish_state(z3);
